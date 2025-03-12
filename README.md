@@ -32,7 +32,7 @@ apk update
 apk upgrade
 ```
 
-## 2.5. Впишем доп.папку для комитов (эта папка по-умолчанию не включена в список для коммита)
+### 2.5. Впишем доп.папку для комитов (эта папка по-умолчанию не включена в список для коммита)
 ```
 lbu include /etc/init.d/
 ```
@@ -98,7 +98,7 @@ ca /etc/openvpn/openvpn_certs/AlpVPN-ca.pem
 cert /etc/openvpn/openvpn_certs/AlpVPN-cert.pem
 key /etc/openvpn/openvpn_certs/AlpVPN-key.pem
 dh /etc/openvpn/openvpn_certs/dh1024.pem
-tls-auth /etc/openvpn/openvpn_certs/ta.key 0
+tls-auth /etc/openvpn/openvpn_certs/ta.key 0 - Этого файла пока еще несуществует
 server 10.8.0.0 255.255.255.0
 ifconfig-pool-persist ipp.txt
 push "redirect-gateway def1"
@@ -120,8 +120,10 @@ push "rcvbuf 393216"
 
 ...
 
+### X. Генерируем свой OpenVPN Static key V1
+```
 openvpn --genkey secret /etc/openvpn/openvpn_certs/ta.key
-	tls-auth /etc/openvpn/openvpn_certs/ta.key 0
+```
 
 ### X. Блокируем доступ к SSH не из сети VPN (это необязательно и может привести к потере доступа) 
 ```
@@ -130,15 +132,6 @@ nano /etc/ssh/sshd_config
 service sshd restart
 ```
 
-#
-# 2048 bit OpenVPN static key
-#
------BEGIN OpenVPN Static key V1-----
-1eb675ed4442450bd1fe719995b40335
-бла-бла-бла
-299493b34477defb31e8cba42c067c24
------END OpenVPN Static key V1-----
-
 ### X. Для разделения сгенерированного общего файла (.pfx) на отдельные файлы ключей (.pem) используем команды в Линукс (необходимо знать пароль)
 ```
 openssl pkcs12 -in file.pfx -cacerts -nokeys -out cacert.pem
@@ -146,6 +139,8 @@ openssl pkcs12 -in file.pfx -nocerts -nodes -out key.pem
 openssl pkcs12 -in file.pfx -nokeys -clcerts -out cert.pem
 ```
 
+### X. Пример настройки клиента во внутренней сети
+```
 client
 dev tun
 proto udp
@@ -161,6 +156,7 @@ key key.pem
 tls-auth ta.key 1
 verb 3 
 mute 20
+```
 
 ### X. Для сохрания коммита в постоянную память Alpine используем команду
 ```
