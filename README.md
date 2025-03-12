@@ -1,10 +1,10 @@
 # openVPN-server_on_AlpineLinux
 
-Работаем от root
+Процессор / память - VIA Eden Processor 1000MHz (32бит) / 0,5 Гб DDR2
 
-Версия сервера - openVPN 2.6.12
+Версия AlpineLinux / Версия ядра Linux - 3.21.3 / 6.12.13-0-lts
 
-Версия библиотеки - OpenSSL 3.3.3
+Версия сервера / библиотеки - openVPN 2.6.12 / OpenSSL 3.3.3
 
 Настрока производится для VPN сети - 10.8.0.1/24
 
@@ -13,6 +13,8 @@
 Сервер имеет глобальный адрес - 
 
 Сервер имеет локальный адрес - 192.168.4.181/24
+
+Работаем от root
 
 ### 1. Впишем новые репозитории для обновления пакетов
 ```
@@ -24,7 +26,7 @@ vi /etc/apk/repositories
 	:wq
  ```
 
-## 2. Обновим систему
+### 2. Обновим систему
 ```
 apk update
 apk upgrade
@@ -35,19 +37,19 @@ apk upgrade
 lbu include /etc/init.d/
 ```
 
-## 3. Установим веб-админку. Будет сгенерирован самоподписанный сертификат для шифрования соединения. Работает только по протоколу httpS (без перенарпавления)
+### 3. Установим веб-админку. Будет сгенерирован самоподписанный сертификат для шифрования соединения. Работает только по протоколу httpS (без перенарпавления)
 ```
 setup-acf
 ```
 
-## 4. Установим пакеты для удобства работы
+### 4. Установим пакеты для удобства работы
 ```
 apk add mc
 apk add nanp
 apk add htop
 ```
 
-## 5. Установим пакеты для работы сервера openVPN
+### 5. Установим пакеты для работы сервера openVPN
 ```
 apk add openvpn
 apk add openssl
@@ -56,7 +58,7 @@ apk add acf-openssl
 apk add iptables
 ```
 
-## 6. Добавим сервер openVPN в автозагрузку
+### 6. Добавим сервер openVPN в автозагрузку
 ```
 rc-update add openvpn default
 ```
@@ -69,7 +71,7 @@ nano /etc/sysctl.conf
 	net.ipv4.ip_forward=1
 sysctl -p
 
-## X. Создаем правила для iptables и сохраняем их
+### X. Создаем правила для iptables и сохраняем их
 ```
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A FORWARD -i eth0 -o tun0 -m state --state ESTABLISHED,RELATED -j ACCEPT
@@ -78,17 +80,17 @@ iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
 /etc/init.d/iptables save
 ```
 
-## X. Добавим iptables в автозагрузку
+### X. Добавим iptables в автозагрузку
 ```
 rc-update add iptables default
 rc-update add iptables sysinit
 ```
 
-
-ifconfig
-
-...
-
+### X. Создадим ключи для сервера. Будет создан файл .pfx, закрытый паролем
+### X. Впишем их в настройки сервера. Необходимо указать на файл .pfx и открыть его паролем
+### X. Добавим ключ Диффи-Хофмана вручную (2048 бит). Штатное средство генерирует слабый ключ (1024 бит)
+### X. Допишем кофигурацию сервера вручную
+```
 port 2020
 proto udp
 dev tun
@@ -114,13 +116,14 @@ explicit-exit-notify 1
 auth-nocache
 push "sndbuf 393216"
 push "rcvbuf 393216"
+```
 
 ...
 
 openvpn --genkey secret /etc/openvpn/openvpn_certs/ta.key
 	tls-auth /etc/openvpn/openvpn_certs/ta.key 0
 
-## X. Блокируем доступ к SSH не из мети VPN (это необязательно и может привести к потере доступа) 
+### X. Блокируем доступ к SSH не из сети VPN (это необязательно и может привести к потере доступа) 
 ```
 nano /etc/ssh/sshd_config
 	ListenAddress 10.8.0.1
@@ -136,7 +139,7 @@ service sshd restart
 299493b34477defb31e8cba42c067c24
 -----END OpenVPN Static key V1-----
 
-## X. Для разделения сгенерированного общего файла (.pfx) на отдельные файлы ключей (.pem) используем команды в Линукс (необходимо знать пароль)
+### X. Для разделения сгенерированного общего файла (.pfx) на отдельные файлы ключей (.pem) используем команды в Линукс (необходимо знать пароль)
 ```
 openssl pkcs12 -in file.pfx -cacerts -nokeys -out cacert.pem
 openssl pkcs12 -in file.pfx -nocerts -nodes -out key.pem
@@ -159,7 +162,7 @@ tls-auth ta.key 1
 verb 3 
 mute 20
 
-## X. Для сохрания коммита в постоянную память Alpine используем команду
+### X. Для сохрания коммита в постоянную память Alpine используем команду
 ```
 lbu commit
 ```
