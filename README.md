@@ -1,17 +1,20 @@
 # openVPN-server_on_AlpineLinux
 
 ## 1. Впишем новые репозитории для обновления пакетов
-\\\
+```
 vi /etc/apk/repositories
 	I
 	http://dl-cdn.alpinelinux.org/alpine/v3.21/main
 	http://dl-cdn.alpinelinux.org/alpine/v3.21/community
 	Esc
 	:wq
- \\\
+ ```
 
+## 2. Обновим систему
+```
 apk update
 apk upgrade
+```
 
 setup-acf
 apk add mc nanp htop
