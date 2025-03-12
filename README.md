@@ -32,7 +32,7 @@ apk update
 apk upgrade
 ```
 
-### 2.5. Впишем доп.папку для комитов (эта папка по-умолчанию не включена в список для коммита)
+### 2.5. Впишем доп.папку для коммитов (эта папка по-умолчанию не включена в список для коммита)
 ```
 lbu include /etc/init.d/
 ```
@@ -87,8 +87,19 @@ rc-update add iptables sysinit
 ```
 
 ### X. Создадим ключи для сервера (тип ключа - ssl_server_cert). Утвердим их. Будет создан файл .pfx, закрытый паролем
+
 ### X. Впишем их в настройки сервера. Необходимо указать на файл .pfx и открыть его паролем
+
 ### X. Добавим ключ Диффи-Хофмана вручную (2048 бит). Штатное средство генерирует слабый ключ (1024 бит)
+```
+openssl dhparam -out /etc/openvpn/openvpn_certs/dh2048.pem 2028
+```
+
+### X. Генерируем свой OpenVPN Static key V1
+```
+openvpn --genkey secret /etc/openvpn/openvpn_certs/ta.key
+```
+
 ### X. Допишем кофигурацию сервера вручную
 ```
 port 2020
@@ -98,7 +109,7 @@ ca /etc/openvpn/openvpn_certs/AlpVPN-ca.pem
 cert /etc/openvpn/openvpn_certs/AlpVPN-cert.pem
 key /etc/openvpn/openvpn_certs/AlpVPN-key.pem
 dh /etc/openvpn/openvpn_certs/dh1024.pem
-tls-auth /etc/openvpn/openvpn_certs/ta.key 0 - Этого файла пока еще несуществует
+tls-auth /etc/openvpn/openvpn_certs/ta.key 0
 server 10.8.0.0 255.255.255.0
 ifconfig-pool-persist ipp.txt
 push "redirect-gateway def1"
@@ -118,14 +129,7 @@ push "sndbuf 393216"
 push "rcvbuf 393216"
 ```
 
-...
-
-### X. Генерируем свой OpenVPN Static key V1
-```
-openvpn --genkey secret /etc/openvpn/openvpn_certs/ta.key
-```
-
-### X. Блокируем доступ к SSH не из сети VPN (это необязательно и может привести к потере доступа) 
+### X. Блокируем доступ к SSH не из сети VPN (это необязательно и может привести к потере доступа!) 
 ```
 nano /etc/ssh/sshd_config
 	ListenAddress 10.8.0.1
