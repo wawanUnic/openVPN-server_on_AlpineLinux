@@ -30,7 +30,7 @@ apk update
 apk upgrade
 ```
 
-## 2.5 Впишем доп.папку для комитов (эта папка по-умолчанию не включена в список для коммита)
+## 2.5. Впишем доп.папку для комитов (эта папка по-умолчанию не включена в список для коммита)
 ```
 lbu include /etc/init.d/
 ```
@@ -120,9 +120,12 @@ push "rcvbuf 393216"
 openvpn --genkey secret /etc/openvpn/openvpn_certs/ta.key
 	tls-auth /etc/openvpn/openvpn_certs/ta.key 0
 
+## X. Блокируем доступ к SSH не из мети VPN (это необязательно и может привести к потере доступа) 
+```
 nano /etc/ssh/sshd_config
 	ListenAddress 10.8.0.1
 service sshd restart
+```
 
 #
 # 2048 bit OpenVPN static key
@@ -133,9 +136,12 @@ service sshd restart
 299493b34477defb31e8cba42c067c24
 -----END OpenVPN Static key V1-----
 
-openssl pkcs12 -in u1.pfx -cacerts -nokeys -out cacert.pem
-openssl pkcs12 -in u1.pfx -nocerts -nodes -out key.pem
-openssl pkcs12 -in u1.pfx -nokeys -clcerts -out cert.pem
+## X. Для разделения сгенерированного общего файла (.pfx) на отдельные файлы ключей (.pem) используем команды в Линукс (необходимо знать пароль)
+```
+openssl pkcs12 -in file.pfx -cacerts -nokeys -out cacert.pem
+openssl pkcs12 -in file.pfx -nocerts -nodes -out key.pem
+openssl pkcs12 -in file.pfx -nokeys -clcerts -out cert.pem
+```
 
 client
 dev tun
@@ -153,8 +159,7 @@ tls-auth ta.key 1
 verb 3 
 mute 20
 
-## X. Для сохрания коммита в постоянную память Alpine используем команды
+## X. Для сохрания коммита в постоянную память Alpine используем команду
 ```
-lbu include /etc/init.d/ - вводится один раз для включения этого каталога в список для коммита
-lbu commit - ввоидтся каждый раз при коммите
+lbu commit
 ```
