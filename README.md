@@ -16,22 +16,56 @@ apk update
 apk upgrade
 ```
 
+## 3. Установим веб-админку. Будет сгенерирован самоподписанный сертификат для шифрования соединения. Работает только по протоколу httpS (без перенарпавления)
+```
 setup-acf
-apk add mc nanp htop
-apk add openvpn openssl acf-openvpn acf-openssl iptables
+```
+
+## 4. Установим пакеты для удобства работы
+```
+apk add mc
+apk add nanp
+apk add htop
+```
+
+## 5. Установим пакеты для работы сервера openVPN
+```
+apk add openvpn
+apk add openssl
+apk add acf-openvpn
+apk add acf-openssl
+apk add iptables
+```
+
+## 6. Добавим сервер openVPN в автозагрузку
+```
 rc-update add openvpn default
+```
+
 modprobe tun
 echo "tun" >> /etc/modules-load.d/tun.conf
+
+
 nano /etc/sysctl.conf
 	net.ipv4.ip_forward=1
 sysctl -p
+
+## X.Создаем правила для iptables и сохраняем их
+```
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A FORWARD -i eth0 -o tun0 -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A FORWARD -s 10.8.0.0/24 -o eth0 -j ACCEPT
 iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
 /etc/init.d/iptables save
+```
+
+## X. Добавим iptables в автозагрузку
+```
 rc-update add iptables default
 rc-update add iptables sysinit
+```
+
+
 ifconfig
 
 ...
@@ -66,6 +100,7 @@ push "rcvbuf 393216"
 
 openvpn --genkey secret /etc/openvpn/openvpn_certs/ta.key
 	tls-auth /etc/openvpn/openvpn_certs/ta.key 0
+
 nano /etc/ssh/sshd_config
 	ListenAddress 10.8.0.1
 service sshd restart
@@ -75,27 +110,13 @@ service sshd restart
 #
 -----BEGIN OpenVPN Static key V1-----
 1eb675ed4442450bd1fe719995b40335
-e54aae1cfe5886cc58606cf432820ae5
-7e21ca0cb6cc35d4b53f7b10f979f030
-1909697d8367dc8923efc7e409fb16e0
-7be8a01da2e3843711ab6f6a679c838b
-e319b50d2a25eff09d0fd7586b42d3c8
-f841a29c272918dd040d8c8532a371fb
-9086d700ac6577ab908f8aa231794d03
-5925732e561a7489275637a8496ff198
-30e78d027b2eb47338f2ab4e3da5a96a
-151d61e86bcfd01703fed8ec00027b33
-7bc1769592e7bec80e1b665a66d3307a
-fa9f64c5cb81cb09f3fbb14e571138d8
-73a64fcf7ca0e4f9a83b138203b46db1
-418671536bd753ba9e435600b4be1802
+бла-бла-бла
 299493b34477defb31e8cba42c067c24
 -----END OpenVPN Static key V1-----
 
 openssl pkcs12 -in u1.pfx -cacerts -nokeys -out cacert.pem
 openssl pkcs12 -in u1.pfx -nocerts -nodes -out key.pem
 openssl pkcs12 -in u1.pfx -nokeys -clcerts -out cert.pem
-
 
 client
 dev tun
@@ -113,6 +134,8 @@ tls-auth ta.key 1
 verb 3 
 mute 20
 
-(lbu commit)
-(lbu include /etc/init.d/)
-
+Для сохрания коммита в постоянную память Alpine используем команды
+```
+lbu include /etc/init.d/ - вводится один раз для включения этого каталога в список для коммита
+lbu commit - ввоидтся каждый раз при коммите
+```
