@@ -61,17 +61,24 @@ apk add iptables
 rc-update add openvpn default
 ```
 
+### 7. Загружаем модуль ядра TUN. Модуль TUN создаёт виртуальный сетевой интерфейс, который может быть использован для туннелирования IP-пакетов
+```
 modprobe tun
-echo "tun" >> /etc/modules-load.d/tun.conf
+```
 
-### X. Разрешаем переанаправление пакетов в системе
+### 8. Добавляем строку "tun" в файл /etc/modules-load.d/tun.conf. Файл tun.conf используется для указания модулей, которые должны загружаться автоматически при загрузке системы. Добавление "tun" в этот файл гарантирует, что модуль TUN будет загружаться автоматически при каждом запуске системы
+```
+echo "tun" >> /etc/modules-load.d/tun.conf
+```
+
+### 9. Разрешаем переанаправление пакетов в системе
 ```
 nano /etc/sysctl.conf
 	net.ipv4.ip_forward=1
 sysctl -p
 ```
 
-### X. Создаем правила для iptables и сохраняем их
+### 10. Создаем правила для iptables и сохраняем их
 ```
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A FORWARD -i eth0 -o tun0 -m state --state ESTABLISHED,RELATED -j ACCEPT
@@ -80,27 +87,27 @@ iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
 /etc/init.d/iptables save
 ```
 
-### X. Добавим iptables в автозагрузку
+### 11. Добавим iptables в автозагрузку
 ```
 rc-update add iptables default
 rc-update add iptables sysinit
 ```
 
-### X. Создадим ключи для сервера (тип ключа - ssl_server_cert). Утвердим их. Будет создан файл .pfx, закрытый паролем
+### 12. Создадим ключи для сервера (тип ключа - ssl_server_cert). Утвердим их. Будет создан файл .pfx, закрытый паролем
 
-### X. Впишем их в настройки сервера. Необходимо указать на файл .pfx и открыть его паролем
+### 13. Впишем их в настройки сервера. Необходимо указать на файл .pfx и открыть его паролем
 
-### X. Добавим ключ Диффи-Хофмана вручную (2048 бит). Штатное средство генерирует слабый ключ (1024 бит)
+### 14. Добавим ключ Диффи-Хофмана вручную (2048 бит). Штатное средство генерирует слабый ключ (1024 бит)
 ```
 openssl dhparam -out /etc/openvpn/openvpn_certs/dh2048.pem 2028
 ```
 
-### X. Генерируем свой OpenVPN Static key V1
+### 15. Генерируем свой OpenVPN Static key V1
 ```
 openvpn --genkey secret /etc/openvpn/openvpn_certs/ta.key
 ```
 
-### X. Допишем кофигурацию сервера вручную. Сохраним это и запустим сервер. Убедимся в нормальном запуске
+### 16. Допишем кофигурацию сервера вручную. Сохраним это и запустим сервер. Убедимся в нормальном запуске
 ```
 port 2020
 proto udp
@@ -129,23 +136,23 @@ push "sndbuf 393216"
 push "rcvbuf 393216"
 ```
 
-### X. Блокируем доступ к SSH не из сети VPN (это необязательно и может привести к потере доступа!) 
+### 17. Блокируем доступ к SSH не из сети VPN (это необязательно и может привести к потере доступа!) 
 ```
 nano /etc/ssh/sshd_config
 	ListenAddress 10.8.0.1
 service sshd restart
 ```
 
-### X. Создадим ключи для клиента1 (тип ключа - ssl_client_cert). Клиенты могут и сами себе создавать ключи. Утвердим их. Будет создан файл .pfx, закрытый паролем
+### 18. Создадим ключи для клиента1 (тип ключа - ssl_client_cert). Клиенты могут и сами себе создавать ключи. Утвердим их. Будет создан файл .pfx, закрытый паролем
 
-### X. Для разделения сгенерированного общего файла (.pfx) на отдельные файлы ключей (.pem) используем команды в Линукс (необходимо знать пароль)
+### 19. Для разделения сгенерированного общего файла (.pfx) на отдельные файлы ключей (.pem) используем команды в Линукс (необходимо знать пароль)
 ```
 openssl pkcs12 -in file.pfx -cacerts -nokeys -out cacert.pem
 openssl pkcs12 -in file.pfx -nocerts -nodes -out key.pem
 openssl pkcs12 -in file.pfx -nokeys -clcerts -out cert.pem
 ```
 
-### X. Пример настройки клиента во внутренней сети
+### 20. Пример настройки клиента во внутренней сети
 ```
 client
 dev tun
@@ -164,12 +171,43 @@ verb 3
 mute 20
 ```
 
-### X. Для сохрания коммита в постоянную память Alpine используем команду
+### 21. Пример настройки клиента во внешней сети (Это слабое устройство, использующее режим inline, т.е. данные вписаны прямо в .ovpn)
+```
+client
+dev tun
+proto udp
+remote 78.10.222.186 2020
+resolv-retry infinite
+persist-key
+persist-tun
+remote-cert-tls server
+cipher AES-256-GCM
+verb 3
+mute 20
+<ca>
+-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----
+</ca>
+<cert>
+-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----
+</cert>
+<key>
+-----BEGIN PRIVATE KEY-----
+-----END PRIVATE KEY-----
+</key>
+<tls-auth>
+-----BEGIN OpenVPN Static key V1-----
+-----END OpenVPN Static key V1-----
+</tls-auth>
+```
+
+### 22. Для сохрания коммита в постоянную память Alpine используем команду
 ```
 lbu commit
 ```
 
-### X. Проблема в параметре на сервере:
+### 23. Проблема в параметре на сервере:
 ```
 tls-auth /etc/openvpn/openvpn_certs/ta.key 0
 ```
