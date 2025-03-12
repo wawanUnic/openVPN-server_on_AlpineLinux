@@ -162,7 +162,7 @@ resolv-retry infinite
 persist-key
 persist-tun
 remote-cert-tls server
-cipher CHACHA20-POLY1305
+data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305
 ca cacert.pem
 cert cert.pem
 key key.pem
@@ -181,7 +181,7 @@ resolv-retry infinite
 persist-key
 persist-tun
 remote-cert-tls server
-cipher AES-256-GCM
+data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305
 verb 3
 mute 20
 <ca>
