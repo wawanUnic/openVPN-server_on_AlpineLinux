@@ -43,7 +43,7 @@ setup-acf
 ### 4. Установим пакеты для удобства работы
 ```
 apk add mc
-apk add nanp
+apk add nano
 apk add htop
 ```
 
