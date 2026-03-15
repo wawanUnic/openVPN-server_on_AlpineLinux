@@ -99,7 +99,7 @@ rc-update add iptables sysinit
 
 ### 14. Добавим ключ Диффи-Хофмана вручную (2048 бит). Штатное средство генерирует слабый ключ (1024 бит)
 ```
-openssl dhparam -out /etc/openvpn/openvpn_certs/dh2048.pem 2028
+openssl dhparam -out /etc/openvpn/openvpn_certs/dh2048.pem 2048
 ```
 
 ### 15. Генерируем свой OpenVPN Static key V1
